@@ -28,7 +28,7 @@
     <string name="whisper_to_input_settings_title">Whisper To Input Settings</string>
     <string name="settings_btn_apply">Apply</string>
     <string name="settings_speech_to_text_backend">Speech to Text Backend</string>
-    <string name="settings_speech_to_text_backend_desc">Use the official OpenAI API, Whisper ASR Webservice, or NVIDIA NIM backend.</string>
+    <string name="settings_speech_to_text_backend_desc">Use the official OpenAI API, Whisper ASR Webservice, NVIDIA NIM, Voxtral (Mistral), or ElevenLabs Scribe backend.</string>
     <string name="settings_option_openai_api">OpenAI API</string>
     <string name="settings_option_openai_api_default_endpoint">https://api.openai.com/v1/audio/transcriptions</string>
     <string name="settings_option_openai_api_default_model">whisper-1</string>
@@ -40,10 +40,22 @@
     <string name="settings_option_nvidia_nim_default_endpoint">http://localhost:9000/v1/audio/transcriptions</string>
     <string name="settings_option_nvidia_nim_default_model"></string> <!-- Empty default model -->
     <string name="settings_option_nvidia_nim_default_language">multi</string> <!-- Empty default language -->
+    <string name="settings_option_voxtral">Voxtral (Mistral)</string>
+    <string name="settings_option_voxtral_default_endpoint">https://api.mistral.ai/v1/audio/transcriptions</string>
+    <string name="settings_option_voxtral_default_model">voxtral-mini-latest</string>
+    <string name="settings_option_voxtral_default_language">auto</string>
+
+    <!-- ElevenLabs Scribe -->
+    <string name="settings_option_elevenlabs">ElevenLabs Scribe</string>
+    <string name="settings_option_elevenlabs_default_endpoint">https://api.elevenlabs.io/v1/speech-to-text</string>
+    <string name="settings_option_elevenlabs_default_model">scribe_v1</string>
+    <string name="settings_option_elevenlabs_default_language">auto</string>
     <string-array name="settings_speech_to_text_backend_array">
         <item>@string/settings_option_openai_api</item>
         <item>@string/settings_option_whisper_asr_webservice</item>
         <item>@string/settings_option_nvidia_nim</item>
+        <item>@string/settings_option_voxtral</item>
+        <item>@string/settings_option_elevenlabs</item>
     </string-array>
     <string name="settings_endpoint">Endpoint</string>
     <string name="settings_endpoint_desc">The host and port for the OpenAI API, Whisper ASR Webservice, or NVIDIA NIM endpoint.</string>

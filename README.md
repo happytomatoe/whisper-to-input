@@ -54,6 +54,22 @@ The STT/ASR backend service can be either [OpenAI API](https://platform.openai.c
      Model:
      Language Code:           multi
      ```
+   - Voxtral (Mistral):
+     ```
+     Speech to Text Backend:  Voxtral (Mistral)
+     Endpoint:                https://api.mistral.ai/v1/audio/transcriptions
+     API Key:                 <your Mistral API key>
+     Model:                   voxtral-mini-latest
+     Language Code:           auto
+     ```
+   - ElevenLabs Scribe:
+     ```
+     Speech to Text Backend:  ElevenLabs Scribe
+     Endpoint:                https://api.elevenlabs.io/v1/speech-to-text
+     API Key:                 <your ElevenLabs API key>
+     Model:                   scribe_v1
+     Language Code:           auto
+     ```
 
 6. Go to the system settings page and enable the app keyboard. This process may vary depending on your Android version and phone model. The following screenshots are taken on Android 13 of a Asus Zenfone 8.
 
@@ -221,6 +237,33 @@ will show:
 Available ASR models
 {'en,zh,de,es,ru,ko,fr,ja,pt,tr,pl,ca,nl,ar,sv,it,id,hi,fi,vi,he,uk,el,ms,cs,ro,da,hu,ta,no,th,ur,hr,bg,lt,la,mi,ml,cy,sk,te,fa,lv,bn,sr,az,sl,kn,et,mk,br,eu,is,hy,ne,mn,bs,kk,sq,sw,gl,mr,pa,si,km,sn,yo,so,af,oc,ka,be,tg,sd,gu,am,yi,lo,uz,fo,ht,ps,tk,nn,mt,sa,lb,my,bo,tl,mg,as,tt,haw,ln,ha,ba,jw,su,yue,multi': [{'model': ['whisper-large-v3-multi-asr-offline-asr-bls-ensemble']}]}
 ```
+
+### Voxtral (Mistral AI)
+
+Cloud-based speech-to-text API from Mistral AI.
+
+Requires a [Mistral API key](https://console.mistral.ai/api-keys).
+
+- Endpoint: `https://api.mistral.ai/v1/audio/transcriptions`
+- Model: `voxtral-mini-latest` (or `voxtral-small-latest`, `voxtral-mini-2507`)
+- Auth: `Authorization: Bearer <API_KEY>`
+- Language: ISO 639-1 code (e.g., `en`, `zh`, `fr`) or `auto` for auto-detection
+
+See the [Mistral API documentation](https://docs.mistral.ai/api/#tag/audio/operation/createTranscription) for more info.
+
+### ElevenLabs Scribe
+
+Cloud-based speech-to-text API from ElevenLabs.
+
+Requires an [ElevenLabs API key](https://elevenlabs.io/api).
+
+- Endpoint: `https://api.elevenlabs.io/v1/speech-to-text`
+- Model: `scribe_v1`
+- Auth: `xi-api-key: <API_KEY>`
+- Language: ISO 639-1/3 code (e.g., `en`, `eng`, `zh`, `cmn`) or `auto` for auto-detection
+- Optional parameters: `tag_audio_events` (boolean), `timestamps_granularity` (string)
+
+See the [ElevenLabs API documentation](https://elevenlabs.io/docs/api-reference/speech-to-text) for more info.
 
 ## Debugging
 

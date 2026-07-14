@@ -94,7 +94,11 @@ class WhisperInputService : InputMethodService() {
      */
     override fun onCreateInputView(): View {
         // Initialize members
-        recorderManager = RecorderManager(this)
+        recorderManager = RecorderManager(this).apply {
+            setOnRecorderStateChange { state ->
+                handleRecorderStateChange(state)
+            }
+        }
 
         // Preload conversion table
         ChineseUtils.preLoad(true, TransType.SIMPLE_TO_TAIWAN)
@@ -153,12 +157,31 @@ class WhisperInputService : InputMethodService() {
         startActivity(dialogIntent)
     }
 
+    private fun handleRecorderStateChange(state: RecorderManager.RecorderState) {
+        when (state) {
+            RecorderManager.RecorderState.Finish -> {
+                // End of speech detected -> transcribe
+                stopRecordingAndTranscribe()
+            }
+            RecorderManager.RecorderState.Cancelled -> {
+                // No speech detected within timeout -> stop recording
+                recorderManager?.stop()
+                isRecording = false
+            }
+            else -> { }
+        }
+    }
+
     override fun onWindowHidden() {
         super.onWindowHidden()
-        // Stop any ongoing recording/transcription when the IME is hidden
-        whisperTranscriber.stop()
-        recorderManager?.stop()
-        isRecording = false
+        // If we are already transcribing or finished, let the transcription complete
+        // Otherwise, stop everything
+        val currentState = recorderManager?.getCurrentState()
+        if (currentState != RecorderManager.RecorderState.Finish) {
+            whisperTranscriber.stop()
+            recorderManager?.stop()
+            isRecording = false
+        }
     }
 
     override fun onDestroy() {

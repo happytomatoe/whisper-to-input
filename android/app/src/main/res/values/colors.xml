@@ -3,4 +3,5 @@
     <color name="dark_gray">#FF777777</color>
     <color name="theme_light_grey">#d9d9d9</color>
     <color name="theme_rich_black">#FF001A23</color>
-</resources>
+    <color name="link_blue">#FF1A73E8</color>
+    </resources>

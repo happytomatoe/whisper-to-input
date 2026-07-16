@@ -23,13 +23,13 @@
 
     <!-- Warning and Error Messages -->
     <string name="error_endpoint_unset">Error: Endpoint is not set in settings.</string>
-    <string name="error_apikey_unset">Error: OpenAI API Key is not set in settings.</string>
+    <string name="error_apikey_unset">Error: API Key is not set in settings.</string>
 
     <!-- Settings -->
     <string name="whisper_to_input_settings_title">Whisper To Input Settings</string>
     <string name="settings_btn_apply">Apply</string>
     <string name="settings_speech_to_text_backend">Speech to Text Backend</string>
-    <string name="settings_speech_to_text_backend_desc">Use the official OpenAI API, Whisper ASR Webservice, NVIDIA NIM, Voxtral (Mistral), or ElevenLabs Scribe backend.</string>
+    <string name="settings_speech_to_text_backend_desc">Use the official OpenAI API, Whisper ASR Webservice, NVIDIA NIM, Voxtral (Mistral), ElevenLabs Scribe, Deepgram, Groq, or 60db backend. An API key is required for OpenAI, NVIDIA NIM, Voxtral, ElevenLabs, Deepgram, Groq, and 60db.</string>
     <string name="settings_option_openai_api">OpenAI API</string>
     <string name="settings_option_openai_api_default_endpoint">https://api.openai.com/v1/audio/transcriptions</string>
     <string name="settings_option_openai_api_default_model">whisper-1</string>
@@ -51,21 +51,43 @@
     <string name="settings_option_elevenlabs_default_endpoint">https://api.elevenlabs.io/v1/speech-to-text</string>
     <string name="settings_option_elevenlabs_default_model">scribe_v1</string>
     <string name="settings_option_elevenlabs_default_language">auto</string>
+    <string name="settings_elevenlabs_api_key_url_label">Get your ElevenLabs API key at https://elevenlabs.io/app/api-key</string>
+
+    <!-- Deepgram -->
+    <string name="settings_option_deepgram">Deepgram</string>
+    <string name="settings_option_deepgram_default_endpoint">https://api.deepgram.com/v1/listen</string>
+    <string name="settings_option_deepgram_default_model">nova-3</string>
+    <string name="settings_option_deepgram_default_language">auto</string>
+
+    <!-- Groq -->
+    <string name="settings_option_groq">Groq</string>
+    <string name="settings_option_groq_default_endpoint">https://api.groq.com/openai/v1/audio/transcriptions</string>
+    <string name="settings_option_groq_default_model">whisper-large-v3-turbo</string>
+    <string name="settings_option_groq_default_language">auto</string>
+
+    <!-- 60db -->
+    <string name="settings_option_60db">60db</string>
+    <string name="settings_option_60db_default_endpoint">https://api.60db.ai/stt</string>
+    <string name="settings_option_60db_default_model">60db-stt-v01</string>
+    <string name="settings_option_60db_default_language">auto</string>
     <string-array name="settings_speech_to_text_backend_array">
         <item>@string/settings_option_openai_api</item>
         <item>@string/settings_option_whisper_asr_webservice</item>
         <item>@string/settings_option_nvidia_nim</item>
         <item>@string/settings_option_voxtral</item>
         <item>@string/settings_option_elevenlabs</item>
+        <item>@string/settings_option_deepgram</item>
+        <item>@string/settings_option_groq</item>
+        <item>@string/settings_option_60db</item>
     </string-array>
     <string name="settings_endpoint">Endpoint</string>
-    <string name="settings_endpoint_desc">The host and port for the OpenAI API, Whisper ASR Webservice, or NVIDIA NIM endpoint.</string>
+    <string name="settings_endpoint_desc">The host and port for the STT endpoint (e.g., OpenAI API, Deepgram, Groq, 60db, Whisper ASR Webservice, or NVIDIA NIM).</string>
     <string name="settings_endpoint_hint"><![CDATA[e.g., http://<host>:<port>/asr]]></string>
     <string name="settings_language_code">Language Code</string>
     <string name="settings_language_code_desc">The language code to be included in the request payload (e.g., en, zh).</string>
     <string name="settings_language_code_hint">Enter Language Code (e.g., en, zh)</string>
     <string name="settings_api_key">API Key</string>
-    <string name="settings_api_key_desc">The official OpenAI API Key to be used in requests.</string>
+    <string name="settings_api_key_desc">The API key for the selected backend (required for OpenAI, NVIDIA NIM, Voxtral, ElevenLabs, Deepgram, Groq, and 60db).</string>
     <string name="settings_api_key_hint">Enter OpenAI API Key…</string>
     <string name="settings_model">Model</string>
     <string name="settings_model_desc">The model to use for transcription (e.g., whisper-1).</string>

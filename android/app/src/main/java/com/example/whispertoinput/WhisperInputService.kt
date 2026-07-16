@@ -20,8 +20,13 @@
 package com.example.whispertoinput
 
 import android.inputmethodservice.InputMethodService
-import android.view.View
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.view.View
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.datastore.preferences.core.Preferences
 import com.example.whispertoinput.recorder.RecorderManager
@@ -32,7 +37,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.io.File
 
 private const val RECORDED_AUDIO_FILENAME_M4A = "recorded.m4a"
 private const val RECORDED_AUDIO_FILENAME_OGG = "recorded.ogg"
@@ -40,22 +44,40 @@ private const val AUDIO_MEDIA_TYPE_M4A = "audio/mp4"
 private const val AUDIO_MEDIA_TYPE_OGG = "audio/ogg"
 
 /**
- * Voice-only input method service.
- * This service provides voice typing functionality without a keyboard UI.
- * It works as a voice input engine that can be selected alongside Google Voice Typing.
+ * Voice input method service with tap-to-toggle recording.
+ * Tap mic to start, tap again to stop and transcribe.
  */
 class WhisperInputService : InputMethodService() {
     private val whisperTranscriber: WhisperTranscriber = WhisperTranscriber()
-    private var recorderManager: RecorderManager? = null
+    private var recorderManager: RecorderManager = RecorderManager()
     private var recordedAudioFilename: String = ""
     private var audioMediaType: String = AUDIO_MEDIA_TYPE_M4A
     private var useOggFormat: Boolean = false
-    private var isRecording: Boolean = false
+
+    // UI elements
+    private var micButton: ImageButton? = null
+    private var statusLabel: TextView? = null
+
+    companion object {
+        const val ACTION_TOGGLE_RECORDING = "com.example.whispertoinput.action.TOGGLE_RECORDING"
+    }
+
+    private val toggleReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_TOGGLE_RECORDING) {
+                toggleRecording()
+            }
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        registerReceiver(toggleReceiver, IntentFilter(ACTION_TOGGLE_RECORDING), Context.RECEIVER_EXPORTED)
+    }
 
     private fun transcriptionCallback(text: String?) {
         if (!text.isNullOrEmpty()) {
             currentInputConnection?.commitText(text, 1)
-            // Check if auto-switch-back is enabled and switch if so
             CoroutineScope(Dispatchers.Main).launch {
                 val autoSwitchBack = dataStore.data.map { preferences: Preferences ->
                     preferences[AUTO_SWITCH_BACK] ?: false
@@ -65,19 +87,19 @@ class WhisperInputService : InputMethodService() {
                 }
             }
         }
-        isRecording = false
+        updateMicUI(false)
     }
 
     private fun transcriptionExceptionCallback(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        isRecording = false
+        updateMicUI(false)
     }
 
     private suspend fun updateAudioFormat() {
         val backend = dataStore.data.map { preferences: Preferences ->
             preferences[SPEECH_TO_TEXT_BACKEND] ?: getString(R.string.settings_option_openai_api)
         }.first()
-        
+
         useOggFormat = backend == getString(R.string.settings_option_nvidia_nim)
         if (useOggFormat) {
             recordedAudioFilename = "${externalCacheDir?.absolutePath}/${RECORDED_AUDIO_FILENAME_OGG}"
@@ -88,66 +110,74 @@ class WhisperInputService : InputMethodService() {
         }
     }
 
-    /**
-     * For a voice-only IME, we return an empty view.
-     * The system handles showing the mic button and triggering voice input.
-     */
     override fun onCreateInputView(): View {
-        // Initialize members
-        recorderManager = RecorderManager(this).apply {
-            setOnRecorderStateChange { state ->
-                handleRecorderStateChange(state)
-            }
+        val view = layoutInflater.inflate(R.layout.keyboard_view, null)
+
+        micButton = view.findViewById(R.id.btn_mic)
+        statusLabel = view.findViewById(R.id.label_status)
+
+        micButton?.setOnClickListener {
+            toggleRecording()
         }
 
         // Preload conversion table
         ChineseUtils.preLoad(true, TransType.SIMPLE_TO_TAIWAN)
         ChineseUtils.preLoad(true, TransType.TAIWAN_TO_SIMPLE)
 
-        // Initialize audio format based on backend setting
         CoroutineScope(Dispatchers.Main).launch {
             updateAudioFormat()
         }
 
-        // Return an empty view - this is a voice-only IME
-        return View(this)
+        return view
     }
 
-    /**
-     * Called when the IME is started. For voice input, we auto-start recording.
-     */
     override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        
-        // Auto-start recording when the voice IME is activated
-        if (!isRecording && !restarting) {
-            CoroutineScope(Dispatchers.Main).launch {
-                updateAudioFormat()
-                startRecording()
-            }
-        }
+        // Don't auto-start — wait for mic button tap
     }
 
-    private fun startRecording() {
-        // Check audio permission
-        if (!recorderManager!!.allPermissionsGranted(this)) {
+    private fun toggleRecording() {
+        if (!recorderManager.allPermissionsGranted(this)) {
             launchMainActivity()
             return
         }
 
-        recorderManager!!.start(this, recordedAudioFilename, useOggFormat)
-        isRecording = true
-    }
+        if (recorderManager.isRecording) {
+            // Stop recording and transcribe
+            recorderManager.stop()
+            updateMicUI(false)
+            statusLabel?.text = getString(R.string.transcribing)
 
-    private fun stopRecordingAndTranscribe() {
-        if (isRecording) {
-            recorderManager!!.stop()
             whisperTranscriber.startAsync(this,
                 recordedAudioFilename,
                 audioMediaType,
                 "",
-                { transcriptionCallback(it) },
-                { transcriptionExceptionCallback(it) })
+                { text ->
+                    android.util.Log.d("whisper-input", "Transcription result: '$text'")
+                    transcriptionCallback(text)
+                },
+                { msg ->
+                    android.util.Log.e("whisper-input", "Transcription error: $msg")
+                    transcriptionExceptionCallback(msg)
+                })
+        } else {
+            // Start recording
+            CoroutineScope(Dispatchers.Main).launch {
+                updateAudioFormat()
+                recorderManager.start(this@WhisperInputService, recordedAudioFilename, useOggFormat)
+                updateMicUI(true)
+                statusLabel?.text = getString(R.string.recording)
+            }
+        }
+    }
+
+    private fun updateMicUI(isRecording: Boolean) {
+        if (isRecording) {
+            micButton?.setImageResource(R.drawable.mic_pressed)
+            statusLabel?.text = getString(R.string.recording)
+        } else {
+            micButton?.setImageResource(R.drawable.mic_idle)
+            statusLabel?.text = getString(R.string.whisper_to_input)
         }
     }
 
@@ -157,36 +187,19 @@ class WhisperInputService : InputMethodService() {
         startActivity(dialogIntent)
     }
 
-    private fun handleRecorderStateChange(state: RecorderManager.RecorderState) {
-        when (state) {
-            RecorderManager.RecorderState.Finish -> {
-                // End of speech detected -> transcribe
-                stopRecordingAndTranscribe()
-            }
-            RecorderManager.RecorderState.Cancelled -> {
-                // No speech detected within timeout -> stop recording
-                recorderManager?.stop()
-                isRecording = false
-            }
-            else -> { }
-        }
-    }
-
     override fun onWindowHidden() {
         super.onWindowHidden()
-        // If we are already transcribing or finished, let the transcription complete
-        // Otherwise, stop everything
-        val currentState = recorderManager?.getCurrentState()
-        if (currentState != RecorderManager.RecorderState.Finish) {
-            whisperTranscriber.stop()
-            recorderManager?.stop()
-            isRecording = false
+        android.util.Log.d("whisper-input", "onWindowHidden: isRecording=${recorderManager.isRecording}")
+        if (recorderManager.isRecording) {
+            recorderManager.stop()
+            updateMicUI(false)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         whisperTranscriber.stop()
-        recorderManager?.stop()
+        recorderManager.stop()
+        unregisterReceiver(toggleReceiver)
     }
 }

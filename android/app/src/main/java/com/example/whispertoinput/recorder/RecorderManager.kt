@@ -26,18 +26,16 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.example.whispertoinput.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 
 private const val MEDIA_RECORDER_CONSTRUCTOR_DEPRECATION_API_LEVEL = 31
 
-class RecorderManager(context: Context) {
+/**
+ * Simple recorder that starts/stops on demand.
+ * No FSM, no amplitude monitoring — just record and stop.
+ */
+class RecorderManager {
     companion object {
         fun requiredPermissions() = arrayOf(
             Manifest.permission.RECORD_AUDIO,
@@ -45,48 +43,13 @@ class RecorderManager(context: Context) {
         )
     }
 
-    // Recorder FSM States
-    enum class RecorderState {
-        Idle,      // Recording started, waiting for speech
-        Speaking,  // Speech detected, actively recording
-        Finish,    // End of speech detected, ready to transcribe
-        Cancelled  // No speech detected within timeout, cancelled
-    }
-
     private var recorder: MediaRecorder? = null
-    private var onUpdateMicrophoneAmplitude: (Int) -> Unit = { }
-    private var onRecorderStateChange: (RecorderState) -> Unit = { }
-    private var microphoneAmplitudeUpdateJob: Job? = null
-    private val amplitudeReportPeriod: Long
-    private val context: Context
+    private var _isRecording: Boolean = false
 
-    // FSM state
-    private var currentState: RecorderState = RecorderState.Idle
-    private var silenceDurationMs: Long = 0
-    private var idleDurationMs: Long = 0
-
-    // Thresholds from resources
-    private val idleSpeakingThreshold: Int
-    private val idleCancelThreshold: Int
-    private val idleCancelTimeMs: Long
-    private val speakingFinishThreshold: Int
-    private val speakingFinishTimeMs: Long
-
-    init {
-        this.context = context
-        this.amplitudeReportPeriod = context.resources.getInteger(R.integer.recorder_amplitude_report_period).toLong()
-        this.idleSpeakingThreshold = context.resources.getInteger(R.integer.recorder_fsm_idle_speaking_threshold)
-        this.idleCancelThreshold = context.resources.getInteger(R.integer.recorder_fsm_idle_cancel_threshold)
-        this.idleCancelTimeMs = context.resources.getInteger(R.integer.recorder_fsm_idle_cancel_time).toLong()
-        this.speakingFinishThreshold = context.resources.getInteger(R.integer.recorder_fsm_speaking_finish_threshold)
-        this.speakingFinishTimeMs = context.resources.getInteger(R.integer.recorder_fsm_speaking_finish_time).toLong()
-    }
+    val isRecording: Boolean get() = _isRecording
 
     fun start(context: Context, filename: String, useOggFormat: Boolean = false) {
-        recorder?.apply {
-            stop()
-            release()
-        }
+        stop()  // Clean up any previous recorder
 
         recorder =
             if (Build.VERSION.SDK_INT >= MEDIA_RECORDER_CONSTRUCTOR_DEPRECATION_API_LEVEL) {
@@ -95,22 +58,17 @@ class RecorderManager(context: Context) {
                 MediaRecorder()
             }
 
-        val file: File = File(filename)
+        val file = File(filename)
         if (file.exists()) {
             file.delete()
-            Log.e("whisper-input", "File should not exist")
         }
 
         recorder!!.apply {
             setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
             if (useOggFormat) {
-                // Use the OGG and OPUS encoder following the recommendation in NVIDIA Riva
-                // Ref: https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/riva_audio.proto.html
-                // This format and encoder is the only one supported by both NVIDIA Riva and MediaRecorder.
                 setOutputFormat(MediaRecorder.OutputFormat.OGG)
                 setAudioEncoder(MediaRecorder.AudioEncoder.OPUS)
             } else {
-                // Use M4A format for other backends
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
             }
@@ -120,97 +78,28 @@ class RecorderManager(context: Context) {
                 prepare()
             } catch (e: IOException) {
                 Log.e("whisper-input", "prepare() failed")
+                return
             }
 
             start()
         }
-
-        // Reset FSM state
-        currentState = RecorderState.Idle
-        silenceDurationMs = 0
-        idleDurationMs = 0
-        notifyStateChange()
-
-        // Start a job to periodically report current amplitude and run FSM
-        microphoneAmplitudeUpdateJob?.cancel()
-        microphoneAmplitudeUpdateJob = CoroutineScope(Dispatchers.Main).launch {
-            while (recorder != null) {
-                val amplitude = recorder?.maxAmplitude ?: 0
-                onUpdateMicrophoneAmplitude(amplitude)
-                updateFsm(amplitude)
-                delay(amplitudeReportPeriod)
-            }
-        }
-    }
-
-    private fun updateFsm(amplitude: Int) {
-        when (currentState) {
-            RecorderState.Idle -> {
-                if (amplitude > idleSpeakingThreshold) {
-                    // Speech detected -> transition to Speaking
-                    currentState = RecorderState.Speaking
-                    silenceDurationMs = 0
-                    notifyStateChange()
-                } else {
-                    // Still idle, accumulate idle time
-                    idleDurationMs += amplitudeReportPeriod
-                    if (idleDurationMs >= idleCancelTimeMs) {
-                        // No speech for too long -> cancel
-                        currentState = RecorderState.Cancelled
-                        notifyStateChange()
-                    }
-                }
-            }
-            RecorderState.Speaking -> {
-                if (amplitude <= speakingFinishThreshold) {
-                    // Silence detected, accumulate silence duration
-                    silenceDurationMs += amplitudeReportPeriod
-                    if (silenceDurationMs >= speakingFinishTimeMs) {
-                        // End of speech detected -> transition to Finish
-                        currentState = RecorderState.Finish
-                        notifyStateChange()
-                    }
-                } else {
-                    // Speech continues, reset silence counter
-                    silenceDurationMs = 0
-                }
-            }
-            RecorderState.Finish, RecorderState.Cancelled -> {
-                // Terminal states, do nothing
-            }
-        }
-    }
-
-    private fun notifyStateChange() {
-        onRecorderStateChange(currentState)
+        _isRecording = true
+        Log.d("whisper-input", "Recording started: $filename")
     }
 
     fun stop() {
         recorder?.apply {
-            stop()
+            try {
+                stop()
+            } catch (e: IllegalStateException) {
+                Log.e("whisper-input", "stop() failed: ${e.message}")
+            }
             release()
         }
         recorder = null
-
-        microphoneAmplitudeUpdateJob?.cancel()
-        microphoneAmplitudeUpdateJob = null
+        _isRecording = false
     }
 
-    // Assign onUpdateMicrophoneAmplitude callback
-    fun setOnUpdateMicrophoneAmplitude(onUpdateMicrophoneAmplitude: (Int) -> Unit) {
-        this.onUpdateMicrophoneAmplitude = onUpdateMicrophoneAmplitude
-    }
-
-    // Assign onRecorderStateChange callback
-    fun setOnRecorderStateChange(onRecorderStateChange: (RecorderState) -> Unit) {
-        this.onRecorderStateChange = onRecorderStateChange
-    }
-
-    fun getCurrentState(): RecorderState {
-        return currentState
-    }
-
-    // Returns whether all of the permissions are granted.
     fun allPermissionsGranted(context: Context): Boolean {
         for (permission in requiredPermissions()) {
             if (ContextCompat.checkSelfPermission(
@@ -221,7 +110,6 @@ class RecorderManager(context: Context) {
                 return false
             }
         }
-
         return true
     }
 }

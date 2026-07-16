@@ -70,6 +70,30 @@ The STT/ASR backend service can be either [OpenAI API](https://platform.openai.c
      Model:                   scribe_v1
      Language Code:           auto
      ```
+   - Deepgram:
+     ```
+     Speech to Text Backend:  Deepgram
+     Endpoint:                https://api.deepgram.com/v1/listen
+     API Key:                 <your Deepgram API key>
+     Model:                   nova-3
+     Language Code:           auto
+     ```
+   - Groq:
+     ```
+     Speech to Text Backend:  Groq
+     Endpoint:                https://api.groq.com/openai/v1/audio/transcriptions
+     API Key:                 <your Groq API key>
+     Model:                   whisper-large-v3-turbo
+     Language Code:           auto
+     ```
+   - 60db:
+     ```
+     Speech to Text Backend:  60db
+     Endpoint:                https://api.60db.ai/stt
+     API Key:                 <your 60db API key>
+     Model:                   60db-stt-v01
+     Language Code:           auto
+     ```
 
 6. Go to the system settings page and enable the app keyboard. This process may vary depending on your Android version and phone model. The following screenshots are taken on Android 13 of a Asus Zenfone 8.
 
@@ -264,6 +288,45 @@ Requires an [ElevenLabs API key](https://elevenlabs.io/api).
 - Optional parameters: `tag_audio_events` (boolean), `timestamps_granularity` (string)
 
 See the [ElevenLabs API documentation](https://elevenlabs.io/docs/api-reference/speech-to-text) for more info.
+
+### Deepgram
+
+Cloud-based speech-to-text API from Deepgram.
+
+Requires a [Deepgram API key](https://console.deepgram.com/).
+
+- Endpoint: `https://api.deepgram.com/v1/listen`
+- Model: `nova-3` (or `nova-2`, `base`, etc.)
+- Auth: `Authorization: Token <API_KEY>`
+- Language: ISO 639-1 code (e.g., `en`, `zh`, `fr`) or `auto` for auto-detection (sent as `detect_language=true`)
+
+See the [Deepgram API documentation](https://developers.deepgram.com/reference/pre-recorded) for more info.
+
+### Groq
+
+Cloud-based Whisper transcription API from Groq (OpenAI-compatible).
+
+Requires a [Groq API key](https://console.groq.com/keys).
+
+- Endpoint: `https://api.groq.com/openai/v1/audio/transcriptions`
+- Model: `whisper-large-v3-turbo` (or `whisper-large-v3`)
+- Auth: `Authorization: Bearer <API_KEY>`
+- Language: ISO 639-1 code (e.g., `en`, `zh`) or `auto` for auto-detection
+
+See the [Groq API documentation](https://console.groq.com/docs/speech-to-text) for more info.
+
+### 60db
+
+Cloud-based speech-to-text API from 60db.
+
+Requires a [60db API key](https://docs.60db.ai/).
+
+- Endpoint: `https://api.60db.ai/stt`
+- Model: `60db-stt-v01`
+- Auth: `Authorization: Bearer <API_KEY>`
+- Language: ISO 639-1 code (e.g., `en`, `zh`) or `auto` for auto-detection
+
+See the [60db API documentation](https://docs.60db.ai/api-reference/introduction) for more info.
 
 ## Debugging
 

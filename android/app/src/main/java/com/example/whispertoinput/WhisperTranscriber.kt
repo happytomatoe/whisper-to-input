@@ -98,7 +98,7 @@ class WhisperTranscriber {
             }
 
             var rawText = response.body!!.string().trim()
-            
+
             // Handle Voxtral response: {"text": "transcription"}
             if (speechToTextBackend == context.getString(R.string.settings_option_voxtral)) {
                 try {
@@ -114,6 +114,37 @@ class WhisperTranscriber {
                 try {
                     val json = JSONObject(rawText)
                     rawText = json.optString("text", "").trim()
+                } catch (e: JSONException) {
+                    // If not JSON, use as-is
+                }
+            }
+
+            // Handle Deepgram response: {"results":{"channels":[{"alternatives":[{"transcript":"..."}]}]}}
+            if (speechToTextBackend == context.getString(R.string.settings_option_deepgram)) {
+                try {
+                    val json = JSONObject(rawText)
+                    val transcript = json.optJSONObject("results")
+                        ?.optJSONArray("channels")
+                        ?.optJSONObject(0)
+                        ?.optJSONArray("alternatives")
+                        ?.optJSONObject(0)
+                        ?.optString("transcript", "")
+                    rawText = (transcript ?: "").trim()
+                } catch (e: JSONException) {
+                    // If not JSON, use as-is
+                }
+            }
+
+            // Handle 60db response: {"data":{"text":"..."}} or {"text":"..."}
+            if (speechToTextBackend == context.getString(R.string.settings_option_60db)) {
+                try {
+                    val json = JSONObject(rawText)
+                    val data = json.optJSONObject("data")
+                    rawText = if (data != null) {
+                        data.optString("text", "").trim()
+                    } else {
+                        json.optString("text", "").trim()
+                    }
                 } catch (e: JSONException) {
                     // If not JSON, use as-is
                 }
@@ -196,6 +227,26 @@ class WhisperTranscriber {
     ): Request {
         val file: File = File(filename)
         val fileBody: RequestBody = file.asRequestBody(mediaType.toMediaTypeOrNull())
+
+        // Deepgram: raw binary body + query params + Token auth (not multipart)
+        if (speechToTextBackend == context.getString(R.string.settings_option_deepgram)) {
+            if (apiKey == "") {
+                throw Exception(context.getString(R.string.error_apikey_unset))
+            }
+            val deepgramParams = mutableListOf("model=" + if (model.isNotEmpty()) model else "nova-3")
+            if (languageCode.isNotEmpty() && languageCode != "auto") {
+                deepgramParams.add("language=$languageCode")
+            } else {
+                deepgramParams.add("detect_language=true")
+            }
+            val deepgramUrl = "$endpoint?${deepgramParams.joinToString("&")}"
+            val deepgramBody: RequestBody = file.asRequestBody(mediaType.toMediaTypeOrNull())
+            return Request.Builder()
+                .addHeader("Authorization", "Token $apiKey")
+                .url(deepgramUrl)
+                .post(deepgramBody)
+                .build()
+        }
         val requestBody: RequestBody = MultipartBody.Builder().apply {
             setType(MultipartBody.FORM)
             val formDataFilename = if (mediaType == "audio/ogg") "@audio.ogg" else "@audio.m4a"
@@ -205,7 +256,9 @@ class WhisperTranscriber {
                 context.getString(R.string.settings_option_openai_api),
                 context.getString(R.string.settings_option_nvidia_nim),
                 context.getString(R.string.settings_option_voxtral),
-                context.getString(R.string.settings_option_elevenlabs) -> {
+                context.getString(R.string.settings_option_elevenlabs),
+                context.getString(R.string.settings_option_groq),
+                context.getString(R.string.settings_option_60db) -> {
                     addFormDataPart("file", formDataFilename, fileBody)
                 }
                 context.getString(R.string.settings_option_whisper_asr_webservice) -> {
@@ -235,6 +288,15 @@ class WhisperTranscriber {
                         addFormDataPart("language_code", languageCode)
                     }
                 }
+                context.getString(R.string.settings_option_groq) -> {
+                    addFormDataPart("model", model)
+                    addFormDataPart("response_format", "text")
+                }
+                context.getString(R.string.settings_option_60db) -> {
+                    if (languageCode != "auto" && languageCode.isNotEmpty()) {
+                        addFormDataPart("language", languageCode)
+                    }
+                }
             }
         }.build()
 
@@ -242,7 +304,9 @@ class WhisperTranscriber {
         val requestHeaders: Headers = Headers.Builder().apply {
             when (speechToTextBackend) {
                 context.getString(R.string.settings_option_openai_api),
-                context.getString(R.string.settings_option_voxtral) -> {
+                context.getString(R.string.settings_option_voxtral),
+                context.getString(R.string.settings_option_groq),
+                context.getString(R.string.settings_option_60db) -> {
                     if (apiKey == "") {
                         throw Exception(context.getString(R.string.error_apikey_unset))
                     }

@@ -127,6 +127,16 @@
                 style="@style/SettingsField"
                 android:hint="@string/settings_api_key_hint" />
 
+            <TextView
+                android:id="@+id/link_elevenlabs_api_key"
+                style="@style/SettingsDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/settings_elevenlabs_api_key_url_label"
+                android:textColorLink="@color/link_blue"
+                android:visibility="gone" />
+
             <!-- Model -->
             <TextView
                 android:id="@+id/label_model"

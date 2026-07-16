@@ -290,7 +290,11 @@ class MainActivity : AppCompatActivity() {
                                 if (endpointEditText.text.isEmpty() ||
                                     endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
                                     endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
-                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint)
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_elevenlabs_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_deepgram_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_groq_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_60db_default_endpoint)
                                 ) {
                                     endpointEditText.setText(getString(R.string.settings_option_voxtral_default_endpoint))
                                 }
@@ -303,7 +307,11 @@ class MainActivity : AppCompatActivity() {
                                 if (endpointEditText.text.isEmpty() ||
                                     endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
                                     endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
-                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint)
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_voxtral_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_deepgram_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_groq_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_60db_default_endpoint)
                                 ) {
                                     endpointEditText.setText(getString(R.string.settings_option_elevenlabs_default_endpoint))
                                 }
@@ -311,6 +319,58 @@ class MainActivity : AppCompatActivity() {
                                 modelEditText.setText(getString(R.string.settings_option_elevenlabs_default_model))
                                 val languageCodeEditText: EditText = findViewById<EditText>(R.id.field_language_code)
                                 languageCodeEditText.setText(getString(R.string.settings_option_elevenlabs_default_language))
+                            }
+                            else if (selectedItem == getString(R.string.settings_option_deepgram)) {
+                                val endpointEditText: EditText = findViewById<EditText>(R.id.field_endpoint)
+                                if (endpointEditText.text.isEmpty() ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_voxtral_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_elevenlabs_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_groq_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_60db_default_endpoint)
+                                ) {
+                                    endpointEditText.setText(getString(R.string.settings_option_deepgram_default_endpoint))
+                                }
+                                val modelEditText: EditText = findViewById<EditText>(R.id.field_model)
+                                modelEditText.setText(getString(R.string.settings_option_deepgram_default_model))
+                                val languageCodeEditText: EditText = findViewById<EditText>(R.id.field_language_code)
+                                languageCodeEditText.setText(getString(R.string.settings_option_deepgram_default_language))
+                            } else if (selectedItem == getString(R.string.settings_option_groq)) {
+                                val endpointEditText: EditText = findViewById<EditText>(R.id.field_endpoint)
+                                if (endpointEditText.text.isEmpty() ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_voxtral_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_elevenlabs_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_deepgram_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_60db_default_endpoint)
+                                ) {
+                                    endpointEditText.setText(getString(R.string.settings_option_groq_default_endpoint))
+                                }
+                                val modelEditText: EditText = findViewById<EditText>(R.id.field_model)
+                                modelEditText.setText(getString(R.string.settings_option_groq_default_model))
+                                val languageCodeEditText: EditText = findViewById<EditText>(R.id.field_language_code)
+                                languageCodeEditText.setText(getString(R.string.settings_option_groq_default_language))
+                            } else if (selectedItem == getString(R.string.settings_option_60db)) {
+                                val endpointEditText: EditText = findViewById<EditText>(R.id.field_endpoint)
+                                if (endpointEditText.text.isEmpty() ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_openai_api_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_whisper_asr_webservice_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_nvidia_nim_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_voxtral_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_elevenlabs_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_deepgram_default_endpoint) ||
+                                    endpointEditText.text.toString() == getString(R.string.settings_option_groq_default_endpoint)
+                                ) {
+                                    endpointEditText.setText(getString(R.string.settings_option_60db_default_endpoint))
+                                }
+                                val modelEditText: EditText = findViewById<EditText>(R.id.field_model)
+                                modelEditText.setText(getString(R.string.settings_option_60db_default_model))
+                                val languageCodeEditText: EditText = findViewById<EditText>(R.id.field_language_code)
+                                languageCodeEditText.setText(getString(R.string.settings_option_60db_default_language))
                             }
                         }
                     }
@@ -349,7 +409,10 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.settings_option_whisper_asr_webservice),
                     getString(R.string.settings_option_nvidia_nim),
                     getString(R.string.settings_option_voxtral),
-                    getString(R.string.settings_option_elevenlabs)
+                    getString(R.string.settings_option_elevenlabs),
+                    getString(R.string.settings_option_deepgram),
+                    getString(R.string.settings_option_groq),
+                    getString(R.string.settings_option_60db)
                 ), getString(R.string.settings_option_openai_api)),
                 SettingText(R.id.field_endpoint, ENDPOINT, getString(R.string.settings_option_openai_api_default_endpoint)),
                 SettingText(R.id.field_language_code, LANGUAGE_CODE, getString(R.string.settings_option_openai_api_default_language)),

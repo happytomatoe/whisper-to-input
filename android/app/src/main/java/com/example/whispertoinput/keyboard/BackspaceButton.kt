@@ -24,7 +24,6 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
-import androidx.appcompat.widget.AppCompatImageButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -36,7 +35,7 @@ private const val QUICK_BACKSPACE_DELAY: Long = 80
 private const val DELAY_BEFORE_QUICK_BACKSPACE: Long = 600
 
 class BackspaceButton(context: Context, attrs: AttributeSet) :
-    AppCompatImageButton(context, attrs) {
+    android.widget.ImageButton(context, attrs) {
 
     fun setBackspaceCallback(callback: () -> Unit) {
         backspaceCallback = callback

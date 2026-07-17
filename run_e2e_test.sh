@@ -756,10 +756,11 @@ cleanup() {
     log_info "Cleaning up..."
     if [[ "$EMULATOR_WAS_RUNNING" != "true" ]]; then
         stop_emulator
+        cleanup_virtual_mic
     else
-        log_info "Emulator was pre-existing — leaving it running"
+        log_info "Emulator was pre-existing — leaving it running (and the virtual mic it needs)"
+        log_info "Virtual mic chain is left intact for the next run to reuse the same emulator"
     fi
-    cleanup_virtual_mic
     log_ok "Cleanup complete"
 }
 

@@ -44,12 +44,17 @@ def encode_string_field(field_number: int, value: str) -> bytes:
 def encode_map_string_entry(key: str, string_value: str) -> bytes:
     """Encode a map<string, Value> entry where Value.string = string_value.
 
-    Map entry structure:
-      field 1 (string): key
-      field 2 (Value):  { field 4 (string): string_value }
+    Map entry structure (from androidx.datastore.preferences.proto):
+      Preferences.preferences (map<string, Value>) = field 1
+      MapEntry:
+        field 1 (string): key
+        field 2 (Value): { field 5 (string): string_value }
+      Value.oneof.value:
+        string = 5
     """
     key_field = encode_string_field(1, key)
-    value_payload = encode_string_field(4, string_value)
+    # Value.string = field 5 (not 4!)
+    value_payload = encode_string_field(5, string_value)
     value_field = encode_bytes(2, value_payload)
     entry = key_field + value_field
     return encode_bytes(1, entry)  # field 1 of Preferences = map entry
@@ -58,9 +63,13 @@ def encode_map_string_entry(key: str, string_value: str) -> bytes:
 def encode_map_bool_entry(key: str, bool_value: bool) -> bytes:
     """Encode a map<string, Value> entry where Value.boolean = bool_value.
 
-    Map entry structure:
-      field 1 (string): key
-      field 2 (Value):  { field 1 (bool): bool_value }
+    Map entry structure (from androidx.datastore.preferences.proto):
+      Preferences.preferences (map<string, Value>) = field 1
+      MapEntry:
+        field 1 (string): key
+        field 2 (Value): { field 1 (bool): bool_value }
+      Value.oneof.value:
+        boolean = 1
     """
     key_field = encode_string_field(1, key)
     value_payload = encode_varint_field(1, 1 if bool_value else 0)
@@ -112,6 +121,8 @@ def build_preferences(backend: str, api_key: str) -> bytes:
     entries += encode_map_bool_entry("is-auto-recording-start", True)
     entries += encode_map_bool_entry("auto-switch-back", False)
     entries += encode_map_bool_entry("add-trailing-space", False)
+    entries += encode_map_bool_entry("use-test-file", True)
+    entries += encode_map_string_entry("test-file-path", "/sdcard/test-speech-loud.wav")
     return entries
 
 

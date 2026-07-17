@@ -25,6 +25,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            buildConfigField("boolean", "DEBUG", "true")
+        }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
